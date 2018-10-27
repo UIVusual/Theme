@@ -1,0 +1,117 @@
+import sys,os,time
+import subprocess
+
+pkgName = "jp.naver.line.android"
+
+if len(sys.argv) == 2:
+    if sys.argv[1] == "reset":
+        print("Resetting..")
+        proc = subprocess.getoutput("rm /storage/emulated/0/Android/data/jp.naver.line.android/theme/a0768339-c2d3-4189-9653-2909e9bb6f58/*")
+        print("Done!\n")
+        print("== Exit ==")
+        os._exit(0)
+    turl = sys.argv[1]
+elif len(sys.argv) == 3:
+    if sys.argv[1] == "reset":
+        print("Resetting.. (%s)" % (sys.argv[2]))
+        proc = subprocess.getoutput("rm /storage/emulated/0/Android/data/%s/theme/a0768339-c2d3-4189-9653-2909e9bb6f58/*" % (sys.argv[2]))
+        print("Done!\n")
+        print("== Exit ==")
+        os._exit(0)
+    turl = sys.argv[1]
+    pkgName = sys.argv[2]
+else:
+    helpMes = """Usage: ./theme (arg1) [arg2]
+
+(arg1) is required
+[arg2] is optional (for advance user)
+
+Argrument 1:
+\t(Theme URL)
+\treset
+
+Argrument 2:
+\t(Package name)\tThis option is for LINE Mod user (Default = jp.naver.line.android)"""
+    print(helpMes)
+    os._exit(0)
+
+try:
+    import progressbar
+except:
+    proc = subprocess.getoutput("pip3 install progressbar2")
+    import progressbar
+with progressbar.ProgressBar(max_value=100) as bar:
+    proc = subprocess.getoutput("ls ~/storage/")
+    haveST = True
+    if "No such file or directory" in proc:
+        haveST = False
+    proc = None
+    count = 0
+    while proc == None or "No such file or directory" in proc:
+        proc = subprocess.getoutput("termux-setup-storage")
+        proc = subprocess.getoutput("ls ~/storage/")
+        count += 1
+        if count > 5:
+            print("\nError: Permission denied")
+            os._exit(1)
+    time.sleep(2)
+    if not haveST:
+        proc = subprocess.getoutput("rm -rf ~/storage/")
+    try:
+        import requests
+    except:
+        proc = subprocess.getoutput("pip3 install requests")
+        import requests
+    bar.update(17)
+    try:
+        from bs4 import BeautifulSoup as bsoup
+    except:
+        proc = subprocess.getoutput("pip3 install bs4")
+        from bs4 import BeautifulSoup as bsoup
+    bar.update(34)
+
+    proc = subprocess.getoutput("ls /storage/emulated/0/Android/data/%s/theme/a0768339-c2d3-4189-9653-2909e9bb6f58" % (pkgName))
+    if proc == "" or "No such file or directory" in proc or "themefile" not in proc:
+        print("\nError: You need to download theme named \"Cony\" first")
+        os._exit(1)
+    proc = proc.split(".")
+    for i in range(len(proc)):
+        if proc[i] == "themefile":
+            ext = proc[i+1]
+    print(ext)
+    bar.update(49)
+
+    try:
+        turl = turl.split("-")
+        turl = "%s-%s-%s-%s-%s" % (turl[0][len(turl[0])-8:],turl[1],turl[2],turl[3],turl[4][:12])
+        turl = "https://store.line.me/themeshop/product/%s" % (turl)
+    except:
+        print("\nError: Cannot get the ID of theme")
+        os._exit(1)
+    bar.update(60)
+
+    headers = {
+    "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36"
+    }
+    try:
+        resp = requests.get(turl)
+    except:
+        print("\nError: Cannot request to the URL")
+        os._exit(1)
+    bar.update(76)
+    try:
+        soup = bsoup(resp.content.decode("utf-8"),"html.parser")
+    except:
+        print("\nError: Cannot operate requested data")
+        os._exit(1)
+    bar.update(99)
+
+    try:
+        tlink = (soup.find("span",attrs={"class":"mdCMN09Image"})["style"].split("url('")[1].split("')")[0].split("/ANDROID/")[0]+"/ANDROID/theme.zip").replace("https://","")
+    except:
+        print("\nError: Cannot get theme information")
+        os._exit(1)
+    proc = subprocess.getoutput("wget %s -O /storage/emulated/0/Android/data/%s/theme/a0768339-c2d3-4189-9653-2909e9bb6f58/themefile.%s" % (tlink,pkgName,ext))
+    bar.update(100)
+print("Done!\n")
+print("== Exit ==")
